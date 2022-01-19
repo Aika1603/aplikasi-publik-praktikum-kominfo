@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Sebaran Wifi Karawang - Public App</title>
+
+    <link rel="shortcut icon" href="./images/logo.jpg" />
+
+    <!-- Global stylesheets -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
+    <link href="./global_assets/css/icons/icomoon/styles.min.css" rel="stylesheet" type="text/css">
+    <link href="./global_assets/css/icons/material/styles.min.css" rel="stylesheet" type="text/css">
+    <link href="./global_assets/css/icons/fontawesome/styles.min.css" rel="stylesheet" type="text/css">
+    <link href="./assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="./assets/css/bootstrap_limitless.min.css" rel="stylesheet" type="text/css">
+    <link href="./assets/css/layout.min.css" rel="stylesheet" type="text/css">
+    <link href="./assets/css/components.min.css" rel="stylesheet" type="text/css">
+    <link href="./assets/css/colors.min.css" rel="stylesheet" type="text/css">
+    <!-- /global stylesheets -->
+    
+    <!-- Core JS files -->
+    <script src="./global_assets/js/main/jquery.min.js"></script>
+    <script src="./global_assets/js/main/bootstrap.bundle.min.js"></script>
+    <script src="./global_assets/js/plugins/loaders/blockui.min.js"></script>
+    <!-- /core JS files -->
+    
+    <script src="./global_assets/js/plugins/notifications/sweet_alert.min.js"></script>
+    <script src="./global_assets/js/plugins/forms/styling/uniform.min.js"></script>
+    <script src="./global_assets/js/plugins/notifications/noty.min.js"></script>
+
+    <script src="./assets/js/app.js"></script>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSvn067-Klfl6R6u3okF_tv5cJkZbv8yM" defer></script>
+
+    <script>
+        const enableBtnSubmit = () => {
+            $('input[type=submit]').prop('disabled', false).val('Resend');
+            $('button[type=submit]').prop('disabled', false).html('Resend');
+        }
+
+        const swalInit = swal.mixin({
+            buttonsStyling: true,
+            confirmButtonClass: 'btn btn-primary',
+            cancelButtonClass: 'btn btn-light'
+        });
+
+        // Noty.js examples
+        var _componentNoty = function () {
+            if (typeof Noty == 'undefined') {
+                console.warn('Warning - noty.min.js is not loaded.');
+                return;
+            }
+
+            // Override Noty defaults
+            Noty.overrideDefaults({
+                theme: 'limitless',
+                layout: 'topRight',
+                type: 'alert',
+                timeout: 2500
+            });
+        };
+
+        function initMap(position = { coords: { latitude: -6.299176829599384 , longitude :  107.29902714304457 , accuracy : '10'}}) {
+            var coords = {
+                lat: parseFloat(position.coords.latitude),
+                lng: parseFloat(position.coords.longitude)
+            };
+            const map = new google.maps.Map(document.getElementById("show-map"), {
+                zoom: 16,
+                center: coords
+            });
+            var marker = addMarker(coords, map);
+
+            var radius = $('#radius').val();
+            var circle = addCircle(radius, coords, map)
+
+            var infowindow = new google.maps.InfoWindow({
+                content: `Titik Koordinat Wifi`,
+                position: coords
+            });
+
+            infowindow.open(map, marker);
+
+            google.maps.event.addListener(map, "click", event => {
+                marker.setMap(null);
+                circle.setMap(null);
+                marker = addMarker(event.latLng, map);
+
+                var infowindow = new google.maps.InfoWindow({
+                    content: `<b>Titik Koordinat</b> <br/>Lat : <b>${event.latLng.lat()}</b><br/> Lng : <b>${event.latLng.lng()}`,
+                    position: event.latLng
+                });
+
+                infowindow.open(map, marker);
+
+                $('#latitude').val(event.latLng.lat());
+                $('#longitude').val(event.latLng.lng());
+
+                radius = $('#radius').val();
+                coords = {
+                    lat: parseFloat(event.latLng.lat()),
+                    lng: parseFloat(event.latLng.lng())
+                };
+                circle = addCircle(radius, coords, map)
+            });
+
+        }
+
+        function addMarker(location, map) {
+            return new google.maps.Marker({
+                position: location,
+                map: map
+            });
+        }
+
+        function addCircle(radius, location, map) {
+            return new google.maps.Circle({
+                strokeColor: '#ffa534',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#ffa534',
+                fillOpacity: 0.35,
+                map: map,
+                center: new google.maps.LatLng(location.lat, location.lng),
+                radius: radius == "" ? 1 : parseInt(radius)
+            });
+        }
+        
+        _componentNoty()
+        $(document).ready(function () {
+            $('.form-input-styled').uniform({
+                fileButtonClass: 'action btn bg-warning-400'
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="page-content">
+        <div class="content-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header header-elements-inline">
+                                <h5 class="card-title font-weight-bold">Data Serbaran Wifi <br/><small> Kabupaten Karawang </small></h5>
+                            </div>
+                            <div class="card-body ">
+                                <div class="row mb-2">
+                                    <div class="col-md-5 mb-2">
+                                        <label class="font-weight-semibold">Kecamatan <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="kecamatan_search" name="kecamatan_search" placeholder="Search by kecamatan" required>
+                                    </div>
+                                    <div class="col-md-5 mb-2">
+                                        <label class="font-weight-semibold">Status <span class="text-danger">*</span></label>
+                                        <select name="status_search" id="status_search" class="form-control" required>
+                                            <option value="">Tampilkan semua</option>
+                                            <option value="1">Active</option>
+                                            <option value="0">Non Active</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <button class="btn bg-teal btn-block" style="margin-top:30px;" onclick="searchSubmit()"><i class="icon-search4 mr-2"></i>Search</button>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table no-wrap">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nama Wifi</th>
+                                                <th>Lokasi</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="data-body">
+                                            <tr>
+                                                <td class="text-center" colspan="5">Tidak ada data</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detail Wifi</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+    
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Wifi Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" placeholder="Masukkan nama"
+                                    value="" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="font-weight-semibold">SSID Wifi Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="ssid_name" name="ssid_name" placeholder="Masukkan nama"
+                                    value="" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Description<span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="desc" name="desc" placeholder="Masukkan deskripsi"
+                                    readonly></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Latitude <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="latitude" id="latitude" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Longitude <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="longitude" id="longitude" readonly>
+                            </div>
+                            <div class="form-group ">
+                                <label class="font-weight-semibold ">Kecamatan <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="kecamatan" id="kecamatan" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="font-weight-semibold ">Desa <span class="text-danger">*</span>
+                                <input type="text" class="form-control" name="desa" id="desa" readonly>
+                            </div>
+                    
+                            <div class="form-group">
+                                <label class="font-weight-semibold">Status </label>
+                                <div id="status"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="" class=""><b class="label">Titik Koordinat Lokasi</b></label>
+                            <div id="show-map" style="height:80%;min-height:300px;background-color: #808080;"></div>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const base_url = "http://localhost:8000/api";
+
+        const errorHandle = (param) => {
+            new Noty({
+                    text: 'Gagal mengambil data. Periksa base url',
+                    type: 'error',
+                    timeout: false,
+                }).show();
+        }
+
+        //get detail data
+        const openModal = (id) => {
+            const notif = new Noty({
+                text: '<i class="icon-spinner4 spinner"></i> Loading',
+                type: 'info',
+                timeout: false,
+            }).show();
+
+            let url = `${base_url}/wifi/detail/${id}`;
+            var settings = {
+                "url": url,
+                "method": "GET",
+                "timeout": 0,
+            };
+
+            $.ajax(settings).done(function (result) {
+                $('#name').val(result.name);
+                $('#ssid_name').val(result.ssid_name);
+                $('#desc').html(result.desc);
+                $('#latitude').val(result.latitude);
+                $('#longitude').val(result.longitude);
+                $('#kecamatan').val(result.kecamatan_name);
+                $('#desa').val(result.desa_name);
+                $('#status').html(result.is_active == '1' ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Non Active</span>');
+
+                let position = {
+                    coords: {
+                        latitude: parseFloat(result.latitude), longitude: parseFloat(result.longitude)
+                    }
+                };
+                initMap(position);
+
+                $('#modal').modal('show');
+                notif.close();
+            }).fail(function (error) {
+                notif.close();
+                errorHandle();
+            });
+        }
+
+        //get all data
+        const get_data = (id = "") => {
+            const notif = new Noty({
+                    text: '<i class="icon-spinner4 spinner"></i> Loading',
+                    type: 'info',
+                    timeout: false,
+                }).show();
+            
+            let url = `${base_url}/wifi`;
+            var settings = {
+                "url": url,
+                "method": "GET",
+                "timeout": 0,
+            };
+
+            $.ajax(settings).done(function (result) {
+                $('#data-body').html('');
+                let i = 1;
+                if (result.length > 0) {
+                    result.data.forEach(e => {
+                        $('#data-body').append(`
+                            <tr>
+                                <td>${i}</td>
+                                <td>${e.name}</td>
+                                <td>${e.kecamatan_name}<br />${e.desa_name}</td>
+                                <td>${e.is_active == '1' ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Non Active</span>'}</td>
+                                <td class=''>
+                                    <button class="btn btn-dark btn-sm" onclick="openModal(${e.id})">See Detail</button>
+                                </td>
+                            </tr>
+                        `);
+                        i++;
+                    });
+                } else {
+                    alert('Tidak ada data');
+                }
+                
+                notif.close();
+            }).fail(function (error){
+                notif.close();
+                errorHandle();
+            });
+
+        }
+
+        const searchSubmit = () => {
+            let kecamatan = $('#kecamatan_search').val();
+            let status = $('#status_search').val();
+
+            const notif = new Noty({
+                text: '<i class="icon-spinner4 spinner"></i> Loading',
+                type: 'info',
+                timeout: false,
+            }).show();
+
+            let url = `${base_url}/wifi/search?kecamatan=${kecamatan}&status=${status}`;
+            var settings = {
+                "url": url,
+                "method": "GET",
+                "timeout": 0,
+            };
+
+            $.ajax(settings).done(function (result) {
+                $('#data-body').html('');
+                let i = 1;
+                if(result.length > 0){
+                    result.data.forEach(e => {
+                        $('#data-body').append(`
+                            <tr>
+                                <td>${i}</td>
+                                <td>${e.name}</td>
+                                <td>${e.kecamatan_name}<br />${e.desa_name}</td>
+                                <td>${e.is_active == '1' ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Non Active</span>'}</td>
+                                <td class=''>
+                                    <button class="btn btn-dark btn-sm" onclick="openModal(${e.id})">See Detail</button>
+                                </td>
+                            </tr>
+                        `);
+                        i++;
+                    });
+                }else{
+                    $('#data-body').html(`
+                            <tr>
+                                <td class="text-center" colspan="5">Tidak ada data</td>
+                            </tr>
+                        `);
+                }
+                
+                notif.close();
+            }).fail(function (error) {
+                notif.close();
+                errorHandle();
+            });
+        }
+        $(document).ready(() => {
+            get_data();
+        })
+
+    </script>
+</body>
+</html>
